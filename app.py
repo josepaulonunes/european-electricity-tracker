@@ -1,3 +1,25 @@
+import sqlite3
+import pandas as pd
+import streamlit as st
+
+# Page settings
+st.set_page_config(page_title="Portugal Electricity Tracker", page_icon="⚡", layout="wide")
+
+# Load the data from the database (kept in memory so the app stays fast)
+@st.cache_data
+def load_data():
+    connection = sqlite3.connect("data/electricity.db")
+    prices = pd.read_sql("SELECT * FROM prices", connection)
+    production = pd.read_sql("SELECT * FROM production", connection)
+    connection.close()
+    return prices, production
+
+prices, production = load_data()
+
+# Title
+st.title("⚡ Portugal Electricity Tracker")
+st.write("Wholesale electricity prices and production by source in Portugal, updated every day. Data: OMIE and REN.")
+
 # 1. Prices for the latest day available (usually tomorrow)
 last_day = prices["date"].max()
 day_prices = prices[prices["date"] == last_day]
@@ -18,6 +40,24 @@ st.bar_chart(chart_data, x_label="Hour (Portuguese time)", y_label="€ per MWh"
 # The 3 cheapest hours, as text
 cheapest_hours = sorted(sorted_prices.head(3)["hour"].tolist())
 st.write("The 3 cheapest hours are:", ", ".join(f"{hour}:00" for hour in cheapest_hours))
+
+# 2. Electricity mix on the latest day with production data
+last_production_day = production["date"].max()
+day_production = production[production["date"] == last_production_day]
+sources = ["hydro", "wind", "solar", "natural_gas", "biomass", "import"]
+
+st.header(f"Where the electricity came from on {last_production_day}")
+st.area_chart(day_production.set_index("hour")[sources], x_label="Hour (Portuguese time)", y_label="MW")
+
+# Join prices and production for the long-term analysis
+df = pd.merge(prices, production, on=["date", "hour"])
+df["year"] = df["date"].str[:4]
+df["renewable_share"] = (df["wind"] + df["solar"]) / df["consumption"] * 100
+
+# 3. Long-term analysis in three tabs
+st.header("How wind and solar are changing electricity prices")
+tab1, tab2, tab3 = st.tabs(["Prices by hour of the day", "The value of solar", "Price vs wind and solar"])
+
 # Tab 1: average price by hour, for the years the user picks
 with tab1:
     years = st.multiselect("Choose years", sorted(df["year"].unique()), default=["2019", "2023", "2025"])
