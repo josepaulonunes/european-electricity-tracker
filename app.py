@@ -1,17 +1,14 @@
-import sqlite3
 import pandas as pd
 import streamlit as st
 
 # Page settings
 st.set_page_config(page_title="Portugal Electricity Tracker", page_icon="⚡", layout="wide")
 
-# Load the data from the database (kept in memory so the app stays fast)
-@st.cache_data
+# Load the data from the CSV files (kept in memory for one hour so the app stays fast)
+@st.cache_data(ttl=3600)
 def load_data():
-    connection = sqlite3.connect("data/electricity.db")
-    prices = pd.read_sql("SELECT * FROM prices", connection)
-    production = pd.read_sql("SELECT * FROM production", connection)
-    connection.close()
+    prices = pd.read_csv("data/prices_hourly.csv")
+    production = pd.read_csv("data/production_hourly.csv")
     return prices, production
 
 prices, production = load_data()
@@ -36,6 +33,10 @@ col3.metric(f"Most expensive hour ({most_expensive['price_pt']:.1f} €/MWh)", f
 # Hourly prices as a bar chart (hour as the index)
 chart_data = day_prices.set_index("hour")["price_pt"]
 st.bar_chart(chart_data, x_label="Hour (Portuguese time)", y_label="€ per MWh")
+
+# Warning when the last hour of the day is not published yet
+if len(day_prices) < 24:
+    st.caption("The price for 23:00 is not published yet. In Spanish time it belongs to the next day.")
 
 # The 3 cheapest hours, as text
 cheapest_hours = sorted(sorted_prices.head(3)["hour"].tolist())
