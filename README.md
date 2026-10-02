@@ -53,4 +53,4 @@ Python (pandas, requests, matplotlib, statsmodels), SQL (SQLite), Streamlit, Git
 
 ## Author
 
-José Nunes, economist. Personal project with public data from OMIE and REN; views are my own.
+José Nunes. Personal project with public data from OMIE and REN; views are my own.
