@@ -13,6 +13,13 @@ def load_data():
 
 prices, production = load_data()
 
+# Profit of a 1 MW battery in one day: buy in the cheapest hours, sell in the most expensive, losing 15% of the energy
+def battery_profit(day_prices, hours):
+    sorted_prices = day_prices.sort_values()
+    cost = sorted_prices.head(hours).sum()
+    revenue = sorted_prices.tail(hours).sum() * 0.85
+    return revenue - cost
+
 # Title
 st.title("⚡ Portugal Electricity Tracker")
 st.write("Wholesale electricity prices and production by source in Portugal, updated every day. Data: OMIE and REN.")
@@ -55,9 +62,9 @@ df = pd.merge(prices, production, on=["date", "hour"])
 df["year"] = df["date"].str[:4]
 df["renewable_share"] = (df["wind"] + df["solar"]) / df["consumption"] * 100
 
-# 3. Long-term analysis in three tabs
+# 3. Long-term analysis in four tabs
 st.header("How wind and solar are changing electricity prices")
-tab1, tab2, tab3 = st.tabs(["Prices by hour of the day", "The value of solar", "Price vs wind and solar"])
+tab1, tab2, tab3, tab4 = st.tabs(["Prices by hour of the day", "The value of solar", "Price vs wind and solar", "The value of a battery"])
 
 # Tab 1: average price by hour, for the years the user picks
 with tab1:
@@ -80,6 +87,23 @@ with tab3:
     by_share = df[df["year"] >= "2023"].groupby("share_group")["price_pt"].mean()
     st.bar_chart(by_share, x_label="Wind and solar as % of consumption", y_label="€ per MWh")
     st.write("Each extra percentage point of wind and solar lowers the price by about 0.94 €/MWh (regression controlling for demand, hydro and year).")
+
+# Tab 4: what a 1 MW battery would earn, tomorrow and in each year
+with tab4:
+    hours = st.slider("Hours of storage (a 1 MW battery that charges and discharges once a day)", 1, 6, 4)
+
+    # Tomorrow: best hours to charge and discharge
+    charge_hours = sorted(sorted_prices.head(hours)["hour"].tolist())
+    discharge_hours = sorted(sorted_prices.tail(hours)["hour"].tolist())
+    st.metric(f"Profit on {last_day}", f"{battery_profit(day_prices['price_pt'], hours):.0f} €")
+    st.write("Charge at:", ", ".join(f"{hour}:00" for hour in charge_hours), "| Discharge at:", ", ".join(f"{hour}:00" for hour in discharge_hours))
+
+    # Every year: average daily profit times 365, in thousand euros
+    daily = prices.groupby("date")["price_pt"].apply(battery_profit, hours).reset_index(name="profit")
+    daily["year"] = daily["date"].str[:4]
+    by_year = daily.groupby("year")["profit"].mean() * 365 / 1000
+    st.bar_chart(by_year, x_label="Year", y_label="Thousand € per MW per year")
+    st.write("The bigger the gap between midday and evening prices, the more a battery earns. This is a simple upper estimate: it ignores the order of the hours, network costs and battery wear. 2026 is shown at the pace of the year so far.")
 
 # Footer
 st.caption("Built by José Nunes with public data from OMIE and REN. Personal project, views are my own.")
