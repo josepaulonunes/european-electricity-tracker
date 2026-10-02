@@ -26,7 +26,7 @@ jobs:
       - name: Download new data
         run: python update_data.py
 
-      - name: Save the updated database
+      - name: Save the updated data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
