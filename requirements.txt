@@ -3,3 +3,4 @@ pandas==3.0.6
 requests==2.34.2
 matplotlib==3.11.2
 statsmodels==0.15.0
+entsoe-py
