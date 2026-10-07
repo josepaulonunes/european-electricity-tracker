@@ -218,3 +218,5 @@ __marimo__/
 .streamlit/secrets.toml
 
 data/electricity.db
+
+entsoe_token.txt
