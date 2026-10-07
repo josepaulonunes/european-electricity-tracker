@@ -25,28 +25,31 @@ def battery_profit(day_prices, hours):
 st.title("⚡ Portugal Electricity Tracker")
 st.write("Wholesale electricity prices and production by source in Portugal, updated every day. Data: OMIE and REN.")
 
-# 1. Prices of the last market day published by OMIE (in Portuguese time it runs from 23:00 to 22:00)
-day_prices = prices.tail(24).copy()
+# 1. Prices for the latest day available (usually tomorrow), in Portuguese time
+last_day = prices["date"].max()
+day_prices = prices[prices["date"] == last_day].copy()
 day_prices["time"] = day_prices["hour"].astype(str) + ":00"
-first_day = day_prices["date"].iloc[0]
-last_day = day_prices["date"].iloc[-1]
 sorted_prices = day_prices.sort_values("price_pt")
 cheapest = sorted_prices.iloc[0]
 most_expensive = sorted_prices.iloc[-1]
 
 st.header(f"Electricity prices for {last_day}")
-st.caption(f"The Iberian market works on Spanish time, one hour ahead of Portugal. So each market day covers 23:00 on {first_day} to 22:00 on {last_day} in Portuguese time.")
 col1, col2, col3 = st.columns(3)
 col1.metric("Average price", f"{day_prices['price_pt'].mean():.1f} €/MWh")
 col2.metric(f"Cheapest hour ({cheapest['price_pt']:.1f} €/MWh)", f"{int(cheapest['hour'])}:00")
 col3.metric(f"Most expensive hour ({most_expensive['price_pt']:.1f} €/MWh)", f"{int(most_expensive['hour'])}:00")
 
-# Hourly prices as a bar chart, in the order of the market day (sort=None keeps the order of the table)
+# Hourly prices as a bar chart with all 24 hours of the day, from 0:00 to 23:00
+all_hours = [f"{hour}:00" for hour in range(24)]
 chart = alt.Chart(day_prices).mark_bar().encode(
-    x=alt.X("time", sort=None, title="Hour (Portuguese time)", axis=alt.Axis(labelAngle=0)),
+    x=alt.X("time", sort=all_hours, scale=alt.Scale(domain=all_hours), title="Hour (Portuguese time)", axis=alt.Axis(labelAngle=0)),
     y=alt.Y("price_pt", title="€ per MWh"),
 )
 st.altair_chart(chart)
+
+# Note when 23:00 is not published yet
+if len(day_prices) < 24:
+    st.caption("23:00 is not published yet. The market works on Spanish time, one hour ahead, so 23:00 in Portugal belongs to the next market day and appears tomorrow afternoon.")
 
 # The 3 cheapest hours, as text
 cheapest_hours = sorted_prices.head(3).sort_index()["hour"].tolist()
