@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import altair as alt
 
 # Page settings
 st.set_page_config(page_title="Portugal Electricity Tracker", page_icon="⚡", layout="wide")
@@ -24,29 +25,31 @@ def battery_profit(day_prices, hours):
 st.title("⚡ Portugal Electricity Tracker")
 st.write("Wholesale electricity prices and production by source in Portugal, updated every day. Data: OMIE and REN.")
 
-# 1. Prices for the latest day available (usually tomorrow)
-last_day = prices["date"].max()
-day_prices = prices[prices["date"] == last_day]
+# 1. Prices of the last market day published by OMIE (in Portuguese time it runs from 23:00 to 22:00)
+day_prices = prices.tail(24).copy()
+day_prices["time"] = day_prices["hour"].astype(str) + ":00"
+first_day = day_prices["date"].iloc[0]
+last_day = day_prices["date"].iloc[-1]
 sorted_prices = day_prices.sort_values("price_pt")
 cheapest = sorted_prices.iloc[0]
 most_expensive = sorted_prices.iloc[-1]
 
 st.header(f"Electricity prices for {last_day}")
+st.caption(f"The Iberian market works on Spanish time, one hour ahead of Portugal. So each market day covers 23:00 on {first_day} to 22:00 on {last_day} in Portuguese time.")
 col1, col2, col3 = st.columns(3)
 col1.metric("Average price", f"{day_prices['price_pt'].mean():.1f} €/MWh")
 col2.metric(f"Cheapest hour ({cheapest['price_pt']:.1f} €/MWh)", f"{int(cheapest['hour'])}:00")
 col3.metric(f"Most expensive hour ({most_expensive['price_pt']:.1f} €/MWh)", f"{int(most_expensive['hour'])}:00")
 
-# Hourly prices as a bar chart (hour as the index)
-chart_data = day_prices.set_index("hour")["price_pt"]
-st.bar_chart(chart_data, x_label="Hour (Portuguese time)", y_label="€ per MWh")
-
-# Warning when the last hour of the day is not published yet
-if len(day_prices) < 24:
-    st.caption("The price for 23:00 is not published yet. In Spanish time it belongs to the next day.")
+# Hourly prices as a bar chart, in the order of the market day (sort=None keeps the order of the table)
+chart = alt.Chart(day_prices).mark_bar().encode(
+    x=alt.X("time", sort=None, title="Hour (Portuguese time)", axis=alt.Axis(labelAngle=0)),
+    y=alt.Y("price_pt", title="€ per MWh"),
+)
+st.altair_chart(chart)
 
 # The 3 cheapest hours, as text
-cheapest_hours = sorted(sorted_prices.head(3)["hour"].tolist())
+cheapest_hours = sorted_prices.head(3).sort_index()["hour"].tolist()
 st.write("The 3 cheapest hours are:", ", ".join(f"{hour}:00" for hour in cheapest_hours))
 
 # 2. Electricity mix on the latest day with production data
@@ -93,8 +96,8 @@ with tab4:
     hours = st.slider("Hours of storage (a 1 MW battery that charges and discharges once a day)", 1, 6, 4)
 
     # Tomorrow: best hours to charge and discharge
-    charge_hours = sorted(sorted_prices.head(hours)["hour"].tolist())
-    discharge_hours = sorted(sorted_prices.tail(hours)["hour"].tolist())
+    charge_hours = sorted_prices.head(hours).sort_index()["hour"].tolist()
+    discharge_hours = sorted_prices.tail(hours).sort_index()["hour"].tolist()
     st.metric(f"Profit on {last_day}", f"{battery_profit(day_prices['price_pt'], hours):.0f} €")
     st.write("Charge at:", ", ".join(f"{hour}:00" for hour in charge_hours), "| Discharge at:", ", ".join(f"{hour}:00" for hour in discharge_hours))
 
