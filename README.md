@@ -95,6 +95,10 @@ streamlit run app.py
 
 The app only needs the CSV files in `data`. To download new European data you need a free ENTSO-E API token, saved in a file called `entsoe_token.txt`. That file is in `.gitignore`, so it never goes to GitHub.
 
+## Tools
+
+Python (pandas, requests, matplotlib, statsmodels, entsoe-py), SQL (SQLite), Streamlit, Plotly, Altair, GitHub Actions.
+
 ## References
 
 **Data**
@@ -109,10 +113,6 @@ The app only needs the CSV files in `data`. To download new European data you ne
 * Sensfuß, F., Ragwitz, M. and Genoese, M. (2008). The merit-order effect: A detailed analysis of the price effect of renewable electricity generation on spot market prices in Germany. *Energy Policy*, 36(8), 3086 to 3094.
 * Hirth, L. (2013). The market value of variable renewables: The effect of solar wind power variability on their relative price. *Energy Economics*, 38, 218 to 230.
 * Newey, W. K. and West, K. D. (1987). A simple, positive semi-definite, heteroskedasticity and autocorrelation consistent covariance matrix. *Econometrica*, 55(3), 703 to 708.
-
-## Tools
-
-Python (pandas, requests, matplotlib, statsmodels, entsoe-py), SQL (SQLite), Streamlit, Plotly, Altair, GitHub Actions.
 
 ## Author
 
