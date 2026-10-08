@@ -97,18 +97,18 @@ The app only needs the CSV files in `data`. To download new European data you ne
 
 ## References
 
-Data
+**Data**
 
 * ENTSO-E Transparency Platform: [transparency.entsoe.eu](https://transparency.entsoe.eu/). Data published under Regulation (EU) No 543/2013.
 * OMIE, day-ahead market results: [omie.es](https://www.omie.es/en/market-results)
 * REN DataHub: [datahub.ren.pt](https://datahub.ren.pt/)
 * entsoe-py, the Python client for the ENTSO-E API: [github.com/EnergieID/entsoe-py](https://github.com/EnergieID/entsoe-py)
 
-Background
+**Background**
 
-* Sensfuß, F., Ragwitz, M. and Genoese, M. (2008). The merit-order effect: A detailed analysis of the price effect of renewable electricity generation on spot market prices in Germany. *Energy Policy*, 36(8), 3086-3094.
-* Hirth, L. (2013). The market value of variable renewables: The effect of solar wind power variability on their relative price. *Energy Economics*, 38, 218-230.
-* Newey, W. K. and West, K. D. (1987). A simple, positive semi-definite, heteroskedasticity and autocorrelation consistent covariance matrix. *Econometrica*, 55(3), 703-708.
+* Sensfuß, F., Ragwitz, M. and Genoese, M. (2008). The merit-order effect: A detailed analysis of the price effect of renewable electricity generation on spot market prices in Germany. *Energy Policy*, 36(8), 3086 to 3094.
+* Hirth, L. (2013). The market value of variable renewables: The effect of solar wind power variability on their relative price. *Energy Economics*, 38, 218 to 230.
+* Newey, W. K. and West, K. D. (1987). A simple, positive semi-definite, heteroskedasticity and autocorrelation consistent covariance matrix. *Econometrica*, 55(3), 703 to 708.
 
 ## Tools
 
