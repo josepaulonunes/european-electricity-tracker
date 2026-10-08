@@ -27,7 +27,8 @@ jobs:
         run: python update_data.py
 
       - name: Download new European data
-        run: python update_europe.py
+        run: python -u update_europe.py
+        timeout-minutes: 30
         env:
           ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
 

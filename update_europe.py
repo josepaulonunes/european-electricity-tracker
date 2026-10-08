@@ -6,7 +6,7 @@ from entsoe import EntsoePandasClient
 token = os.environ.get("ENTSOE_TOKEN")
 if token is None:
     token = open("entsoe_token.txt").read().strip()
-client = EntsoePandasClient(api_key=token)
+client = EntsoePandasClient(api_key=token, timeout=60)
 
 # Zones with prices and zones with production
 price_zones = ["PT", "ES", "FR", "BE", "NL", "DE_LU", "AT", "CH", "IT_NORD", "PL", "CZ", "SK", "HU",
@@ -40,7 +40,7 @@ def download_production(zone, start, end):
     if "Solar" in generation.columns:
         table[zone + "_solar"] = generation["Solar"]
     if "Wind Onshore" in generation.columns:
-        table[zone + "_wind"] = table[zone + "_wind"] + generation["Wind Onshore"].fillna(0)
+        table[zone + "_wind"] = generation["Wind Onshore"]
     if "Wind Offshore" in generation.columns:
         table[zone + "_wind"] = table[zone + "_wind"] + generation["Wind Offshore"].fillna(0)
     table[zone + "_load"] = load["Actual Load"]
