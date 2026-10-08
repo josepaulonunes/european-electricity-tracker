@@ -1,9 +1,10 @@
 import pandas as pd
 import streamlit as st
 import altair as alt
+import plotly.express as px
 
 # Page settings
-st.set_page_config(page_title="Portugal Electricity Tracker", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="European Electricity Tracker", page_icon="⚡", layout="wide")
 
 # Load the data from the CSV files (kept in memory for one hour so the app stays fast)
 @st.cache_data(ttl=3600)
@@ -14,6 +15,16 @@ def load_data():
 
 prices, production = load_data()
 
+# Load the European prices (26 bidding zones) and the 2025 summary, in Central European time
+@st.cache_data(ttl=3600)
+def load_europe():
+    europe = pd.read_csv("data/europe_prices.csv", index_col="time_utc")
+    europe.index = pd.to_datetime(europe.index, utc=True).tz_convert("Europe/Brussels")
+    summary = pd.read_csv("data/europe_summary_2025.csv", index_col=0)
+    return europe, summary
+
+europe, summary = load_europe()
+
 # Profit of a 1 MW battery in one day: buy in the cheapest hours, sell in the most expensive, losing 15% of the energy
 def battery_profit(day_prices, hours):
     sorted_prices = day_prices.sort_values()
@@ -21,11 +32,67 @@ def battery_profit(day_prices, hours):
     revenue = sorted_prices.tail(hours).sum() * 0.85
     return revenue - cost
 
-# Title
-st.title("⚡ Portugal Electricity Tracker")
-st.write("Wholesale electricity prices and production by source in Portugal, updated every day. Data: OMIE and REN.")
+# Name and country code (for the map) of each bidding zone
+zones = {
+    "PT": ["Portugal", "PRT"], "ES": ["Spain", "ESP"], "FR": ["France", "FRA"],
+    "BE": ["Belgium", "BEL"], "NL": ["Netherlands", "NLD"], "DE_LU": ["Germany", "DEU"],
+    "AT": ["Austria", "AUT"], "CH": ["Switzerland", "CHE"], "IT_NORD": ["Italy", "ITA"],
+    "PL": ["Poland", "POL"], "CZ": ["Czechia", "CZE"], "SK": ["Slovakia", "SVK"],
+    "HU": ["Hungary", "HUN"], "SI": ["Slovenia", "SVN"], "HR": ["Croatia", "HRV"],
+    "RO": ["Romania", "ROU"], "BG": ["Bulgaria", "BGR"], "GR": ["Greece", "GRC"],
+    "DK_1": ["Denmark", "DNK"], "SE_3": ["Sweden", "SWE"], "NO_1": ["Norway", "NOR"],
+    "FI": ["Finland", "FIN"], "EE": ["Estonia", "EST"], "LV": ["Latvia", "LVA"],
+    "LT": ["Lithuania", "LTU"], "IE_SEM": ["Ireland", "IRL"],
+}
 
-# 1. Prices for the latest day available (usually tomorrow), in Portuguese time
+# Title
+st.title("⚡ European Electricity Tracker")
+st.write("Wholesale electricity prices across Europe, with a closer look at Portugal, updated every day. Data: ENTSO-E, OMIE and REN.")
+
+# 1. Europe: latest day with the whole day of prices for Portugal (usually tomorrow), in Central European time
+pt_prices = europe["PT"].dropna()
+hours_per_day = pt_prices.groupby(pt_prices.index.strftime("%Y-%m-%d")).count()
+last_europe_day = hours_per_day[hours_per_day >= 23].index.max()
+day_europe = europe[europe.index.strftime("%Y-%m-%d") == last_europe_day]
+
+# Average price of the day in each country (only countries with at least 20 hours published)
+rows = []
+for zone in day_europe.columns:
+    if day_europe[zone].count() >= 20:
+        rows.append({"country": zones[zone][0], "iso": zones[zone][1], "price": round(day_europe[zone].mean(), 1)})
+map_data = pd.DataFrame(rows).sort_values("price")
+
+st.header(f"Electricity prices across Europe on {last_europe_day}")
+tab5, tab6, tab7 = st.tabs(["Map", "Hour by hour", "2025 in numbers"])
+
+# Tab 5: map and ranking of the average price
+with tab5:
+    cheapest_country = map_data.iloc[0]
+    most_expensive_country = map_data.iloc[-1]
+    portugal_rank = map_data["country"].tolist().index("Portugal") + 1
+    portugal_price = map_data[map_data["country"] == "Portugal"]["price"].iloc[0]
+    col1, col2, col3 = st.columns(3)
+    col1.metric(f"Cheapest ({cheapest_country['price']} €/MWh)", cheapest_country["country"])
+    col2.metric(f"Most expensive ({most_expensive_country['price']} €/MWh)", most_expensive_country["country"])
+    col3.metric(f"Portugal ({portugal_price} €/MWh)", f"{portugal_rank}.º of {len(map_data)}")
+
+    # Map of Europe coloured by the average price, from green (cheap) to red (expensive)
+    fig = px.choropleth(map_data, locations="iso", color="price", hover_name="country",
+                        scope="europe", color_continuous_scale="RdYlGn_r", labels={"price": "€/MWh"})
+    fig.update_geos(fitbounds="locations")
+    fig.update_layout(height=600, margin=dict(l=0, r=0, t=0, b=0))
+    st.plotly_chart(fig)
+
+    # Ranking from cheapest to most expensive, with Portugal in red
+    ranking = alt.Chart(map_data).mark_bar().encode(
+        x=alt.X("price", title="Average price (€ per MWh)"),
+        y=alt.Y("country", sort="x", title=None),
+        color=alt.condition(alt.datum.country == "Portugal", alt.value("#d62728"), alt.value("#999999")),
+    )
+    st.altair_chart(ranking)
+    st.caption("Countries with more than one market zone are shown with one zone: Italy (North), Denmark (West), Sweden (Stockholm) and Norway (Oslo). Germany includes Luxembourg.")
+
+# 2. Portugal: prices for the latest day available (usually tomorrow), in Portuguese time
 last_day = prices["date"].max()
 day_prices = prices[prices["date"] == last_day].copy()
 day_prices["time"] = day_prices["hour"].astype(str) + ":00"
@@ -33,7 +100,7 @@ sorted_prices = day_prices.sort_values("price_pt")
 cheapest = sorted_prices.iloc[0]
 most_expensive = sorted_prices.iloc[-1]
 
-st.header(f"Electricity prices for {last_day}")
+st.header(f"Portugal in detail: electricity prices for {last_day}")
 col1, col2, col3 = st.columns(3)
 col1.metric("Average price", f"{day_prices['price_pt'].mean():.1f} €/MWh")
 col2.metric(f"Cheapest hour ({cheapest['price_pt']:.1f} €/MWh)", f"{int(cheapest['hour'])}:00")
@@ -55,7 +122,7 @@ if len(day_prices) < 24:
 cheapest_hours = sorted_prices.head(3).sort_index()["hour"].tolist()
 st.write("The 3 cheapest hours are:", ", ".join(f"{hour}:00" for hour in cheapest_hours))
 
-# 2. Electricity mix on the latest day with production data
+# 3. Electricity mix on the latest day with production data
 last_production_day = production["date"].max()
 day_production = production[production["date"] == last_production_day]
 sources = ["hydro", "wind", "solar", "natural_gas", "biomass", "import"]
@@ -68,7 +135,7 @@ df = pd.merge(prices, production, on=["date", "hour"])
 df["year"] = df["date"].str[:4]
 df["renewable_share"] = (df["wind"] + df["solar"]) / df["consumption"] * 100
 
-# 3. Long-term analysis in four tabs
+# 4. Long-term analysis in four tabs
 st.header("How wind and solar are changing electricity prices")
 tab1, tab2, tab3, tab4 = st.tabs(["Prices by hour of the day", "The value of solar", "Price vs wind and solar", "The value of a battery"])
 
@@ -112,4 +179,4 @@ with tab4:
     st.write("The bigger the gap between midday and evening prices, the more a battery earns. This is a simple upper estimate: it ignores the order of the hours, network costs and battery wear. 2026 is shown at the pace of the year so far.")
 
 # Footer
-st.caption("Built by José Nunes with public data from OMIE and REN. Personal project, views are my own.")
+st.caption("Built by José Nunes with public data from ENTSO-E, OMIE and REN. Personal project, views are my own.")
