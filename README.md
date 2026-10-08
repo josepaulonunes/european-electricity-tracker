@@ -2,7 +2,7 @@
 
 Day-ahead electricity prices for 26 European markets, with a closer look at Portugal. Everything updates by itself every afternoon, as soon as tomorrow's prices are out.
 
-**Live app:** [portugal-electricity-tracker.streamlit.app](https://portugal-electricity-tracker.streamlit.app/)
+**Live app:** [european-electricity-tracker.streamlit.app](https://european-electricity-tracker.streamlit.app/)
 
 ## Why I built this
 
