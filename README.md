@@ -101,4 +101,4 @@ Python (pandas, requests, matplotlib, statsmodels, entsoe-py), SQL (SQLite), Str
 
 ## Author
 
-José Nunes, economist. Personal project built only with public data. The views are my own and don't represent ERSE.
+José Nunes. Personal project built only with public data. The views are my own.
