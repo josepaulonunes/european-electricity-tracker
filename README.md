@@ -101,4 +101,4 @@ Python (pandas, requests, matplotlib, statsmodels, entsoe-py), SQL (SQLite), Str
 
 ## Author
 
-José Nunes. Personal project built only with public data. The views are my own.
+José Nunes. Personal project using public data. Views are my own.
