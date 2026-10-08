@@ -63,10 +63,10 @@ for zone in day_europe.columns:
 map_data = pd.DataFrame(rows).sort_values("price")
 
 st.header(f"Electricity prices across Europe on {last_europe_day}")
-tab5, tab6, tab7 = st.tabs(["Map", "Hour by hour", "2025 in numbers"])
+map_tab, hourly_tab, numbers_tab = st.tabs(["Map", "Hour by hour", "2025 in numbers"])
 
-# Tab 5: map and ranking of the average price
-with tab5:
+# Map tab: map and ranking of the average price
+with map_tab:
     cheapest_country = map_data.iloc[0]
     most_expensive_country = map_data.iloc[-1]
     portugal_rank = map_data["country"].tolist().index("Portugal") + 1
@@ -92,8 +92,8 @@ with tab5:
     st.altair_chart(ranking)
     st.caption("Countries with more than one market zone are shown with one zone: Italy (North), Denmark (West), Sweden (Stockholm) and Norway (Oslo). Germany includes Luxembourg.")
 
-# Tab 6: hourly prices of the countries the user picks
-with tab6:
+# Hour by hour tab: hourly prices of the countries the user picks
+with hourly_tab:
     country_names = [zones[zone][0] for zone in zones]
     chosen = st.multiselect("Choose countries", country_names, default=["Portugal", "Spain", "France", "Germany"])
     hourly = day_europe.copy()
@@ -102,8 +102,8 @@ with tab6:
     st.line_chart(hourly[chosen], x_label="Hour (Central European time)", y_label="€ per MWh")
     st.write("Countries with a lot of solar have cheap middays and expensive evenings. Countries with a lot of hydro, like Norway, have flat prices.")
 
-# Tab 7: summary of 2025 for every country
-with tab7:
+# 2025 tab: summary of 2025 for every country
+with numbers_tab:
     table = summary.rename(columns={
         "average_price": "Average price (€/MWh)",
         "negative_hours": "Hours with a negative price",
