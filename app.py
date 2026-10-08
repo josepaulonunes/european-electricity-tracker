@@ -49,10 +49,10 @@ zones = {
 st.title("⚡ European Electricity Tracker")
 st.write("Wholesale electricity prices across Europe, with a closer look at Portugal, updated every day. Data: ENTSO-E, OMIE and REN.")
 
-# 1. Europe: latest day with the whole day of prices for Portugal (usually tomorrow), in Central European time
-pt_prices = europe["PT"].dropna()
-hours_per_day = pt_prices.groupby(pt_prices.index.strftime("%Y-%m-%d")).count()
-last_europe_day = hours_per_day[hours_per_day >= 23].index.max()
+# 1. Europe: latest day with prices for at least 20 countries (usually tomorrow), in Central European time
+hours_by_day = europe.groupby(europe.index.strftime("%Y-%m-%d")).count()
+countries_per_day = (hours_by_day >= 20).sum(axis=1)
+last_europe_day = countries_per_day[countries_per_day >= 20].index.max()
 day_europe = europe[europe.index.strftime("%Y-%m-%d") == last_europe_day]
 
 # Average price of the day in each country (only countries with at least 20 hours published)
@@ -111,7 +111,7 @@ with tab7:
         "battery_profit": "Battery profit (thousand €/MW)",
     })
     st.dataframe(table)
-    st.caption("Solar capture rate: price received by solar compared with the average price. Battery profit: a 1 MW / 4 MWh battery that buys in the 4 cheapest hours and sells in the 4 most expensive each day. Empty cells: no reliable solar data.")
+    st.caption("Solar capture rate: price received by solar compared with the average price. Battery profit: a 1 MW / 4 MWh battery that buys in the 4 cheapest hours and sells in the 4 most expensive each day. None: no reliable solar data for that country.")
 
 # 2. Portugal: prices for the latest day available (usually tomorrow), in Portuguese time
 last_day = prices["date"].max()
