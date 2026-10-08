@@ -4,3 +4,4 @@ requests==2.34.2
 matplotlib==3.11.2
 statsmodels==0.15.0
 entsoe-py
+plotly==7.1.0
