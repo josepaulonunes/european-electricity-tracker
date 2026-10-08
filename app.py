@@ -92,6 +92,27 @@ with tab5:
     st.altair_chart(ranking)
     st.caption("Countries with more than one market zone are shown with one zone: Italy (North), Denmark (West), Sweden (Stockholm) and Norway (Oslo). Germany includes Luxembourg.")
 
+# Tab 6: hourly prices of the countries the user picks
+with tab6:
+    country_names = [zones[zone][0] for zone in zones]
+    chosen = st.multiselect("Choose countries", country_names, default=["Portugal", "Spain", "France", "Germany"])
+    hourly = day_europe.copy()
+    hourly.columns = [zones[zone][0] for zone in hourly.columns]
+    hourly.index = hourly.index.hour
+    st.line_chart(hourly[chosen], x_label="Hour (Central European time)", y_label="€ per MWh")
+    st.write("Countries with a lot of solar have cheap middays and expensive evenings. Countries with a lot of hydro, like Norway, have flat prices.")
+
+# Tab 7: summary of 2025 for every country
+with tab7:
+    table = summary.rename(columns={
+        "average_price": "Average price (€/MWh)",
+        "negative_hours": "Hours with a negative price",
+        "solar_capture_rate": "Solar capture rate (%)",
+        "battery_profit": "Battery profit (thousand €/MW)",
+    })
+    st.dataframe(table)
+    st.caption("Solar capture rate: price received by solar compared with the average price. Battery profit: a 1 MW / 4 MWh battery that buys in the 4 cheapest hours and sells in the 4 most expensive each day. Empty cells: no reliable solar data.")
+
 # 2. Portugal: prices for the latest day available (usually tomorrow), in Portuguese time
 last_day = prices["date"].max()
 day_prices = prices[prices["date"] == last_day].copy()
