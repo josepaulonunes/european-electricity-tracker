@@ -25,7 +25,7 @@ I work at ERSE, Portugal's energy regulator, and the same topics keep coming up:
 | Hours with a negative price, all 26 markets added up | 829 in 2019, 7,744 in 2025 |
 | Most negative hours in 2025 | Netherlands (584), Germany (573), Spain (555) |
 | Solar capture rate | 92% to 113% in 2019, 50% to 65% in 2025 in most countries |
-| Yearly profit of a 1 MW / 4 MWh battery in 2025 | about 155 thousand € in the Baltics, about 50 thousand € in Norway and Northern Italy |
+| Yearly trading margin of a 1 MW / 4 MWh battery in 2025 | about 155 thousand € in the Baltics, about 50 thousand € in Norway and Northern Italy |
 
 The pattern is the same almost everywhere. Solar panels all produce at the same time, so the more solar a country builds, the lower its midday prices go. That cuts what solar earns and widens the gap between midday and evening, which is exactly what a battery makes money on. Northern Italy and Finland are the exceptions, with solar still earning over 80% of the average price.
 
@@ -44,9 +44,9 @@ The pattern is the same almost everywhere. Solar panels all produce at the same 
 | Solar capture rate | 102% in 2019, about 50% in 2026 |
 | Hours with a price at or below 1 €/MWh | 19 in 2019, about 1,200 by October 2026 |
 | Hours with a negative price | none until 2024, more than 500 by October 2026 |
-| One extra percentage point of wind and solar | price falls by about 0.94 €/MWh |
-| One extra GW of demand | price rises by about 8 €/MWh |
-| Yearly profit of a 1 MW / 4 MWh battery | about 9 thousand € in 2019, about 130 thousand € at the 2026 pace |
+| One extra percentage point of wind and solar | price about 0.94 €/MWh lower |
+| One extra GW of demand | price about 8 €/MWh higher |
+| Yearly trading margin of a 1 MW / 4 MWh battery | about 9 thousand € in 2019, about 130 thousand € at the 2026 pace |
 
 The two effects in the middle come from a regression of the hourly price on the share of wind and solar, the share of hydro, demand and year fixed effects (about 68,000 hours, R² of 0.49, Newey-West standard errors).
 
@@ -82,7 +82,8 @@ A few choices worth knowing:
 
 ## Limits
 
-* The battery numbers are an upper bound. The battery buys in the 4 cheapest hours and sells in the 4 most expensive without checking that it charges before it discharges, and network tariffs, wear and other markets are left out.
+* The battery numbers are a rough estimate of the trading margin, not a business case. The battery buys in the 4 cheapest hours and sells in the 4 most expensive without checking that it charges before it discharges, and network tariffs, wear, other markets and the cost of the battery itself are left out. 2026 is the average day so far times 365, so it can still change with November and December.
+* Since October 2025 the day-ahead market uses 15-minute prices. I average them into hours, so an hour only counts as negative when its average is negative. That makes the latest negative hour counts a bit low.
 * The solar capture rate uses market prices only, without subsidies, contracts or curtailment.
 * The Portuguese regression shows strong associations, not a clean causal effect. It leaves out the daily gas price and hour and month effects.
 
@@ -97,7 +98,7 @@ The app only needs the CSV files in `data`. To download new European data you ne
 
 ## Tools
 
-Python (pandas, requests, matplotlib, statsmodels, entsoe-py), SQL (SQLite), Streamlit, Plotly, Altair, GitHub Actions.
+Python (pandas, requests, matplotlib, statsmodels, entsoe-py), SQL (SQLite), Streamlit, Plotly, GitHub Actions.
 
 ## References
 
