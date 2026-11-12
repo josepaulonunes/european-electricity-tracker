@@ -25,17 +25,21 @@ jobs:
 
       - name: Download new data
         run: python update_data.py
+        timeout-minutes: 15
 
       - name: Download new European data
+        if: always()
         run: python -u update_europe.py
         timeout-minutes: 30
         env:
           ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
 
       - name: Save the updated data
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/prices_hourly.csv data/production_hourly.csv data/europe_prices.csv data/europe_production.csv
           git commit -m "Daily data update" || echo "No new data"
+          git pull --rebase
           git push
