@@ -5,10 +5,13 @@ PRICES_FILE = "data/prices_hourly.csv"
 PRODUCTION_FILE = "data/production_hourly.csv"
 
 
-# Download one day of OMIE prices (day as YYYYMMDD): one row per 15-minute period
+# Download one day of OMIE prices (day as YYYYMMDD): one row per 15-minute period, or an empty table if OMIE fails
 def read_omie_day(day):
     url = "https://www.omie.es/en/file-download?parents%5B0%5D=marginalpdbc&filename=marginalpdbc_" + day + ".1"
-    response = requests.get(url)
+    try:
+        response = requests.get(url, timeout=60)
+    except Exception:
+        return pd.DataFrame()
     rows = []
     for line in response.text.splitlines():
         parts = line.split(";")
@@ -22,16 +25,19 @@ def read_omie_day(day):
     return pd.DataFrame(rows)
 
 
-# Download one day of REN production (day as YYYY-MM-DD): one row per 15 minutes
+# Download one day of REN production (day as YYYY-MM-DD): one row per 15 minutes, or an empty table if REN fails
 def read_ren_production_day(day):
     url = "https://servicebus.ren.pt/datahubapi/electricity/ElectricityProductionBreakdownDaily"
-    response = requests.get(url, params={"culture": "en-US", "date": day})
-    if response.status_code != 200:
+    try:
+        response = requests.get(url, params={"culture": "en-US", "date": day}, timeout=60)
+        data = response.json()
+        table = pd.DataFrame({"time": data["xAxis"]["categories"]})
+        for serie in data["series"]:
+            table[serie["name"]] = serie["data"]
+    except Exception:
         return pd.DataFrame()
-    data = response.json()
-    table = pd.DataFrame({"time": data["xAxis"]["categories"]})
-    for serie in data["series"]:
-        table[serie["name"]] = serie["data"]
+    if len(table.columns) < 2:
+        return pd.DataFrame()
     table["date"] = day
     return table
 
