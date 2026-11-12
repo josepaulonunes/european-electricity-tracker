@@ -1,0 +1,12 @@
+[theme]
+base = "light"
+primaryColor = "#d97706"
+backgroundColor = "#f6f7f9"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#111827"
+borderColor = "#e5e7eb"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+baseRadius = "0.75rem"
+metricValueFontSize = "1.9rem"
+metricValueFontWeight = 700
+dataframeHeaderBackgroundColor = "#f6f7f9"
